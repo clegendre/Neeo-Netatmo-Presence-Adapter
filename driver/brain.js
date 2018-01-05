@@ -91,7 +91,6 @@ function startDriver( brain, devices ) {
       devices 
     })
     .then(() => {
-        console.log('# READY! use the NEEO app to search for "SqueezeBox".');
         devices.forEach( device => {
             setAdapterDeviceId( device );
         })

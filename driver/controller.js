@@ -9,11 +9,11 @@ var auth = {
 };
 
 var api = new netatmo(auth);
-
+var live = '/live/snapshot_720.jpg'; // '/live/index_local.m3u8'; // 
 class Camera {
     constructor( name, camera ){
         this.name = name;
-        this.liveSnapshotUrl = camera.vpn_url + '/live/snapshot_720.jpg';
+        this.liveSnapshotUrl = camera.vpn_url +live ;
         this.status = camera.status == 'on';
     }
 
@@ -22,7 +22,7 @@ class Camera {
     }
 
     setLiveSnapshotUri( value ){
-        this.liveSnapshotUrl = value + '/live/snapshot_720.jpg';;
+        this.liveSnapshotUrl = value + live;
     }
 
     getStatus(){
@@ -34,12 +34,13 @@ class Camera {
     }
 
     enableCameraDetectionFeature(){
+        var self = this;
         return {
             getter: () => {
-                return this.status;
+                return self.status;
             },
             setter: ( v ) => {
-                this.status = v;
+                self.status = v;
                 onPropertyChanged( 'status' );
             }
         }

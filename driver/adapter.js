@@ -15,9 +15,9 @@ function buildDevice( camera ){
             .addAdditionalSearchToken('IPCam')
             .addAdditionalSearchToken('Camera')
             .setType('PROJECTOR')
-            .addImageUrl({ name: 'cameraimage', label: 'Entrée: ', size: 'large' }, camera.getLiveSnapshotUri )
+            .addImageUrl({ name: 'cameraimage', label: 'Entrée: ', size: 'large' }, camera.getLiveSnapshotUri.bind( camera ) )
             .addSwitch({ name: 'cameradetector', label: 'Détection'}, camera.enableCameraDetectionFeature() )
-            .addTextLabel({ name: 'camerastatus', label: 'Camera: ' }, camera.name );
+            .addTextLabel({ name: 'camerastatus', label: 'Camera: ' }, () => camera.name );
 
         const setUpdateCallbackReference = function ( sendComponentUpdate, optionalCallbackFunctions ) {
             
