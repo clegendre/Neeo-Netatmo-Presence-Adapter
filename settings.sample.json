@@ -9,6 +9,6 @@
         "username": "",
         "password": ""
     },
-    "updateDelayMs": 2000,
+    "updateDelayMs": 1000,
     "cameras":["Name_Of_The_Presence_Camera"]
 }

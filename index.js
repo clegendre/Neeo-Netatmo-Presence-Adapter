@@ -29,5 +29,5 @@ function buildDevices( cameras ){
 
 controller.discoverCameras().then( cameras => {
     buildDevices( cameras ).then( devices => brain.startDriver( devices ) );
-    setInterval( () => controller.refreshCameras( cameras ), 60 * 1000 );
+    setInterval( () => controller.refreshCameras( cameras ), 5 * 1000 );
 });

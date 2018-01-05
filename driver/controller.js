@@ -18,11 +18,11 @@ class Camera {
     }
 
     getLiveSnapshotUri(){
-        return this.liveSnapshotUrl + "?t=" + new Date().getTime();
+        return this.liveSnapshotUrl;
     }
 
     setLiveSnapshotUri( value ){
-        this.liveSnapshotUrl = value + live;
+        this.liveSnapshotUrl = value + live + "?t=" + new Date().getTime();
     }
 
     getStatus(){
@@ -41,7 +41,7 @@ class Camera {
             },
             setter: ( v ) => {
                 self.status = v;
-                onPropertyChanged( 'status' );
+                this.onPropertyChanged( 'status' );
             }
         }
     }
