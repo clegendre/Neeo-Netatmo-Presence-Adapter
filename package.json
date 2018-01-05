@@ -1,0 +1,33 @@
+{
+  "name": "Neeo-Netatmo-Presence-Adapter",
+  "version": "0.1.0",
+  "description": "This driver adds Netatmo Presence support to NEEO",
+  "main": "index.js",  
+  "scripts": {
+    "test": "jasmine"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clegendre/Neeo-Netatmo-Presence-Adapter.git"
+  },
+  "keywords": [
+    "Netatmo",
+    "Presence",
+    "Camera",
+    "Server",
+    "NEEO"
+  ],
+  "dependencies": {
+    "neeo-sdk": "*",
+    "netatmo": "^2.1.0"
+  },
+  "author": "Cédric Legendre",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/clegendre/Neeo-Netatmo-Presence-Adapter"
+  },
+  "homepage": "https://github.com/clegendre/Neeo-Netatmo-Presence-Adapter",
+  "devDependencies": {
+    "jasmine": "^2.8.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+    "neeo": {
+        "brainIp" : "",
+        "driverPort" : 6339
+    },
+    "netatmo": {
+        "clientId": "",
+        "clientSecret": "",
+        "username": "",
+        "password": ""
+    },
+    "updateDelayMs": 2000,
+    "cameras":["Name_Of_The_Presence_Camera"]
+}
