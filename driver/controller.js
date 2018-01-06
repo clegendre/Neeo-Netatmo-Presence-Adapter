@@ -10,19 +10,24 @@ var auth = {
 
 var api = new netatmo(auth);
 var live = '/live/snapshot_720.jpg'; // '/live/index_local.m3u8'; // 
+
 class Camera {
-    constructor( name, camera ){
-        this.name = name;
-        this.liveSnapshotUrl = camera.vpn_url +live ;
-        this.status = camera.status == 'on';
+    constructor( cameraSettings ){
+        this.name = cameraSettings.name || cameraSettings;
+        this.localIp = cameraSettings.localAddress;
     }
 
     getLiveSnapshotUri(){
         return this.liveSnapshotUrl;
     }
 
-    setLiveSnapshotUri( value ){
-        this.liveSnapshotUrl = value + live + "?t=" + new Date().getTime();
+    setLiveSnapshotUri( value, isLocal ){
+        if( isLocal && this.localIp ){
+            let urlParts = value.replace('https://', '').split('/');
+            let cameraId = urlParts[3];
+            this.liveSnapshotUrl = 'http://' + this.localIp + '/' + cameraId + live  + "?t=" + new Date().getTime();
+        }
+        else this.liveSnapshotUrl = value + live + "?t=" + new Date().getTime();
     }
 
     getStatus(){
@@ -54,26 +59,32 @@ class Camera {
 module.exports.discoverCameras = () => {
     return new Promise( (resolve, reject) => {
         api.getHomeData( (err,homeData) => {
-            let homes = homeData.homes;
-            let firstHome = homes[0];
-            const cameras = settings.cameras.map( c => {
-                let cameraData = firstHome.cameras.find( homeCamera => c == homeCamera.name ); // Entree
-                return new Camera( c, cameraData );
-            });
-            resolve( cameras );
+            let homeCameras =  homeData.homes[0].cameras;
+            const discoveredCameras = settings.cameras
+                .map( cameraSetting => new Camera( cameraSetting ) )
+                .reduce( ( prev, cam ) => {
+                    let homeCamera = homeCameras.find( homeCamera => cam.name == homeCamera.name );
+                    if( homeCamera ){
+                        cam.setStatus( homeCamera.status );
+                        cam.setLiveSnapshotUri( homeCamera.vpn_url, homeCamera.is_local );
+                        prev.push( cam );
+                    }
+                    return prev;
+                }, []);
+            resolve( discoveredCameras );
         });
     });
 }
 
 module.exports.refreshCameras = ( cameras ) => {
     api.getHomeData(  (err,homeData) => {
-
-        let homes = homeData.homes;
-        let firstHome = homes[0];
-        firstHome.cameras.forEach( homeCamera => {
-            const camera = cameras.find( tc => tc.name == homeCamera.name );
-            camera.setStatus( homeCamera.status );
-            camera.setLiveSnapshotUri( homeCamera.vpn_url );
+        let homeCameras =  homeData.homes[0].cameras;
+        homeCameras.forEach( homeCamera => {
+            const camera = cameras.find( cam => cam.name == homeCamera.name );
+            if( camera ){
+                camera.setStatus( homeCamera.status );
+                camera.setLiveSnapshotUri( homeCamera.vpn_url, homeCamera.is_local );
+            }
         });
     });
 }
