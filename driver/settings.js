@@ -6,9 +6,11 @@ const dirname = __dirname;
 
 module.exports = function() {
     try {
-        return JSON.parse(fs.readFileSync(path.join(dirname, '../settings.json')));
+        let res = JSON.parse(fs.readFileSync(path.join(dirname, '../settings.json')));
+        return res;
     }
     catch (err) {
+        console.log(err)
         throw err;
     }
 }

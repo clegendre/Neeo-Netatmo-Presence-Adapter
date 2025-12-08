@@ -3,6 +3,7 @@
 const controller = require('./driver/controller');
 const adapter = require('./driver/adapter');
 const brain = require('./driver/brain');
+const settings = require('./driver/settings');
 
 console.log('NEEO SDK "Netatmo Presence" adapter');
 console.log('---------------------------------------------');
@@ -12,22 +13,23 @@ console.log('---------------------------------------------');
  * @param cameras
  * @returns An array of devices build by the fluent neeoapi
  *  */
-function buildDevices( cameras ){
+async function buildDevices( cameras ){
     const devices = [];
     return new Promise( ( resolve, reject) => {
-        cameras.forEach( (camera, idx ) => {
-            adapter.buildDevice( camera ).then( device => {
-                devices.push( device );
-
-                if( idx == cameras.length - 1 ){
-                    resolve( devices );
-                }
-            });
+        cameras.forEach( async (camera, idx ) => {
+            let device = await adapter.buildDevice( camera );
+            devices.push( device );
         });
+        resolve( devices );
     })
 }  
 
-controller.discoverCameras().then( cameras => {
-    buildDevices( cameras ).then( devices => brain.startDriver( devices ) );
-    setInterval( () => controller.refreshCameras( cameras ), 5 * 1000 );
-});
+async function run()
+{
+    const cameras = await controller.discoverCameras();
+    const devices = await buildDevices( cameras );
+    brain.startDriver( devices );
+    setInterval( () => controller.refreshCameras( cameras ), 1000 * 60 * 15 );
+}
+
+run().then( x => console.log(x)).catch( err => console.log(err));

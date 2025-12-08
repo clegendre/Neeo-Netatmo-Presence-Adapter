@@ -3,8 +3,7 @@ var settings = require('./settings')();
 var auth = {
   "client_id": settings.netatmo.clientId,
   "client_secret": settings.netatmo.clientSecret,
-  "username": settings.netatmo.username,
-  "password": settings.netatmo.password,
+  "refresh_token": settings.netatmo.refreshToken,
   "scope": "read_presence access_presence"
 };
 
@@ -15,19 +14,22 @@ class Camera {
     constructor( cameraSettings ){
         this.name = cameraSettings.name || cameraSettings;
         this.localIp = cameraSettings.localAddress;
+        this.callbacks = [];
     }
 
-    getLiveSnapshotUri(){
-        return this.liveSnapshotUrl;
+    getLiveSnapshotUri( deviceId ){
+        return this.liveSnapshotUrl + "?t=" + new Date().getTime();
     }
 
     setLiveSnapshotUri( value, isLocal ){
         if( isLocal && this.localIp ){
             let urlParts = value.replace('https://', '').split('/');
             let cameraId = urlParts[3];
-            this.liveSnapshotUrl = 'http://' + this.localIp + '/' + cameraId + live  + "?t=" + new Date().getTime();
+            this.liveSnapshotUrl = 'http://' + this.localIp + '/' + cameraId + live ;
         }
-        else this.liveSnapshotUrl = value + live + "?t=" + new Date().getTime();
+        else this.liveSnapshotUrl = value + live ;
+
+        //this.onPropertyChanged( 'liveSnapshotUrl' );
     }
 
     getStatus(){
@@ -38,7 +40,7 @@ class Camera {
         this.status = value == 'on';
     }
 
-    enableCameraDetectionFeature(){
+    enableCameraDetectionFeature( ){
         var self = this;
         return {
             getter: () => {
@@ -53,13 +55,23 @@ class Camera {
 
     onPropertyChanged( propertyName ) {
         // TODO: POST Netatmo API to change camera status
+        //console.log(propertyName +" firing "  + this.callbacks.length)
+        //this.callbacks.forEach( c => c(propertyName));
+    }
+
+    notifyPropertyChanged( callback ){
+        console.log('Callback registered')
+        //this.callbacks.push(callback);
     }
 }
 
 module.exports.discoverCameras = () => {
+    console.log('Discovering cameras')
     return new Promise( (resolve, reject) => {
         api.getHomeData( (err,homeData) => {
+            console.log('getHomeData result:', { err, homeData });
             let homeCameras =  homeData.homes[0].cameras;
+            console.log(homeCameras);
             const discoveredCameras = settings.cameras
                 .map( cameraSetting => new Camera( cameraSetting ) )
                 .reduce( ( prev, cam ) => {
