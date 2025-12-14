@@ -9,10 +9,11 @@ const settings = require('./settings')();
  */
 function buildDevice( camera ){
     return new Promise( (resolve, reject) => {
-
+        console.log(camera)
         let device = neeoapi.buildDevice( camera.name )
             .setManufacturer('Netatmo')
             .addAdditionalSearchToken('IPCam')
+            .addCapability("alwaysOn")
             .addAdditionalSearchToken('Camera')
             .setType('PROJECTOR')
             .addImageUrl({ name: 'cameraimage', label: 'Entrée: ', size: 'large' }, ( deviceId ) =>  camera.getLiveSnapshotUri.bind( camera, deviceId ) )

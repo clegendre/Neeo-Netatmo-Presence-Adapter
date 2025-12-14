@@ -1,11 +1,8 @@
 {
-  "name": "Neeo-Netatmo-Presence-Adapter",
+  "name": "neeo-netatmo-presence",
   "version": "0.1.0",
   "description": "This driver adds Netatmo Presence support to NEEO",
-  "main": "index.js",  
-  "scripts": {
-    "test": "jasmine"
-  },
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/clegendre/Neeo-Netatmo-Presence-Adapter.git"
@@ -19,15 +16,24 @@
   ],
   "dependencies": {
     "neeo-sdk": "*",
-    "netatmo": "^2.1.0"
+    "netatmo": "^2.4.0"
+  },
+  "scripts": {
+    "test": "jasmine",
+    "build": "esbuild index.js --bundle --platform=node --target=node8 --minify --sourcemap --banner:js=\"var __global = typeof globalThis !== 'undefined' ? globalThis : (typeof global !== 'undefined' ? global : (typeof self !== 'undefined' ? self : Function('return this')())); var global = __global; var self = __global; var window = __global;\" --outfile=steady/neeo-custom/neeo-netatmo-presence/index.js",
+    "start": "node steady/neeo-custom/neeo-netatmo-presence/index.js",
+    "pm2:start": "pm2 start scripts/pm2.config.js",
+    "pm2:stop": "pm2 stop neeo-netatmo-presence || true",
+    "pm2:logs": "pm2 logs nneeo-netatmo-presence"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.1",
+    "jasmine": "^2.8.0"
   },
   "author": "Cédric Legendre",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/clegendre/Neeo-Netatmo-Presence-Adapter"
   },
-  "homepage": "https://github.com/clegendre/Neeo-Netatmo-Presence-Adapter",
-  "devDependencies": {
-    "jasmine": "^2.8.0"
-  }
+  "homepage": "https://github.com/clegendre/Neeo-Netatmo-Presence-Adapter"
 }

@@ -1,2 +1,7 @@
 node_modules
 settings.json
+.vscode/sftp.json
+steady/neeo-custom/neeo-netatmo-presence/index.js
+steady/neeo-custom/neeo-netatmo-presence/index.js.map
+brain_devices.json
+package-lock.json

@@ -1,19 +1,19 @@
-var netatmo = require('netatmo');
-var settings = require('./settings')();
-var auth = {
+const netatmo = require('netatmo');
+const settings = require('./settings')();
+const auth = {
   "client_id": settings.netatmo.clientId,
   "client_secret": settings.netatmo.clientSecret,
+  "access_token": settings.netatmo.accessToken,
   "refresh_token": settings.netatmo.refreshToken,
-  "scope": "read_presence access_presence"
+  "scope": "read_presence access_presence write_presence"
 };
 
-var api = new netatmo(auth);
-var live = '/live/snapshot_720.jpg'; // '/live/index_local.m3u8'; // 
+const api = new netatmo(auth);
+const live = '/live/snapshot_720.jpg'; // '/live/index_local.m3u8'; // 
 
 class Camera {
-    constructor( cameraSettings ){
-        this.name = cameraSettings.name || cameraSettings;
-        this.localIp = cameraSettings.localAddress;
+    constructor( c ){
+        this.name = c.name;
         this.callbacks = [];
     }
 
@@ -28,8 +28,6 @@ class Camera {
             this.liveSnapshotUrl = 'http://' + this.localIp + '/' + cameraId + live ;
         }
         else this.liveSnapshotUrl = value + live ;
-
-        //this.onPropertyChanged( 'liveSnapshotUrl' );
     }
 
     getStatus(){
@@ -41,14 +39,13 @@ class Camera {
     }
 
     enableCameraDetectionFeature( ){
-        var self = this;
+        let self = this;
         return {
             getter: () => {
                 return self.status;
             },
             setter: ( v ) => {
                 self.status = v;
-                this.onPropertyChanged( 'status' );
             }
         }
     }
@@ -69,20 +66,15 @@ module.exports.discoverCameras = () => {
     console.log('Discovering cameras')
     return new Promise( (resolve, reject) => {
         api.getHomeData( (err,homeData) => {
-            console.log('getHomeData result:', { err, homeData });
             let homeCameras =  homeData.homes[0].cameras;
+            let discoveredCameras = [];
             console.log(homeCameras);
-            const discoveredCameras = settings.cameras
-                .map( cameraSetting => new Camera( cameraSetting ) )
-                .reduce( ( prev, cam ) => {
-                    let homeCamera = homeCameras.find( homeCamera => cam.name == homeCamera.name );
-                    if( homeCamera ){
-                        cam.setStatus( homeCamera.status );
-                        cam.setLiveSnapshotUri( homeCamera.vpn_url, homeCamera.is_local );
-                        prev.push( cam );
-                    }
-                    return prev;
-                }, []);
+            for( let homeCamera of homeCameras) {
+                const cam = new Camera( homeCamera );
+                cam.setStatus( homeCamera.status );
+                cam.setLiveSnapshotUri( homeCamera.vpn_url, homeCamera.is_local );
+                discoveredCameras.push(cam);
+            }
             resolve( discoveredCameras );
         });
     });
