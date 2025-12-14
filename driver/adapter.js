@@ -4,35 +4,42 @@ const settings = require('./settings')();
 /**
  * @function buildDevice
  * @param {Camera} camera
- * @description  A basic adapter to control a logitech squeezebox. It looks for favorites and spotify playlist and add them as shortcuts.
+ * @description  A basic adapter to control Netatmo Camera
  * @returns A promise that sould redolve with the device built.
  */
 function buildDevice( camera ){
     return new Promise( (resolve, reject) => {
-
+        console.log(camera)
         let device = neeoapi.buildDevice( camera.name )
             .setManufacturer('Netatmo')
             .addAdditionalSearchToken('IPCam')
+            .addCapability("alwaysOn")
             .addAdditionalSearchToken('Camera')
             .setType('PROJECTOR')
-            .addImageUrl({ name: 'cameraimage', label: 'Entrée: ', size: 'large' }, camera.getLiveSnapshotUri.bind( camera ) )
+            .addImageUrl({ name: 'cameraimage', label: 'Entrée: ', size: 'large' }, ( deviceId ) =>  camera.getLiveSnapshotUri.bind( camera, deviceId ) )
             .addSwitch({ name: 'cameradetector', label: 'Détection'}, camera.enableCameraDetectionFeature() )
-            .addTextLabel({ name: 'camerastatus', label: 'Camera: ' }, () => camera.name );
+            .addTextLabel({ name: 'camerastatus', label: 'Camera: ' }, ( deviceId ) => camera.name );
 
-        const setUpdateCallbackReference = function ( sendComponentUpdate, optionalCallbackFunctions ) {
-            
-            setInterval( function() {
-                const uniqueDeviceId = "default";
+
+        device.registerSubscriptionFunction( function ( sendComponentUpdate, optionalCallbackFunctions ) {
+            const updateCallbackReference = function() {
+                const uniqueDeviceId = camera.uniqueDeviceId || 'default';
                 const uri = camera.getLiveSnapshotUri();
+                const component = 'cameraimage';
+                console.log(uri)
                 sendComponentUpdate({
                     uniqueDeviceId,
-                    component: 'cameraimage',
+                    component,
                     value: uri
-                })
-            }, settings.updateDelayMs || 2000 );
-        };
+                }).catch(err => {
+                    console.log('[ADAPTER] Unable to send component update', { component, uniqueDeviceId, err: err && err.message ? err.message : err });
+                });
+            };
 
-        device.registerSubscriptionFunction( setUpdateCallbackReference.bind(this) );
+            console.log('Update Callback Received. Registering Notify Property Changed handler')
+            //camera.notifyPropertyChanged( ( property ) => 
+            setInterval( updateCallbackReference , settings.updateDelayMs );
+        } );
 
         resolve( device );
     })

@@ -1,33 +1,33 @@
-var netatmo = require('netatmo');
-var settings = require('./settings')();
-var auth = {
+const netatmo = require('netatmo');
+const settings = require('./settings')();
+const auth = {
   "client_id": settings.netatmo.clientId,
   "client_secret": settings.netatmo.clientSecret,
-  "username": settings.netatmo.username,
-  "password": settings.netatmo.password,
-  "scope": "read_presence access_presence"
+  "access_token": settings.netatmo.accessToken,
+  "refresh_token": settings.netatmo.refreshToken,
+  "scope": "read_presence access_presence write_presence"
 };
 
-var api = new netatmo(auth);
-var live = '/live/snapshot_720.jpg'; // '/live/index_local.m3u8'; // 
+const api = new netatmo(auth);
+const live = '/live/snapshot_720.jpg'; // '/live/index_local.m3u8'; // 
 
 class Camera {
-    constructor( cameraSettings ){
-        this.name = cameraSettings.name || cameraSettings;
-        this.localIp = cameraSettings.localAddress;
+    constructor( c ){
+        this.name = c.name;
+        this.callbacks = [];
     }
 
-    getLiveSnapshotUri(){
-        return this.liveSnapshotUrl;
+    getLiveSnapshotUri( deviceId ){
+        return this.liveSnapshotUrl + "?t=" + new Date().getTime();
     }
 
     setLiveSnapshotUri( value, isLocal ){
         if( isLocal && this.localIp ){
             let urlParts = value.replace('https://', '').split('/');
             let cameraId = urlParts[3];
-            this.liveSnapshotUrl = 'http://' + this.localIp + '/' + cameraId + live  + "?t=" + new Date().getTime();
+            this.liveSnapshotUrl = 'http://' + this.localIp + '/' + cameraId + live ;
         }
-        else this.liveSnapshotUrl = value + live + "?t=" + new Date().getTime();
+        else this.liveSnapshotUrl = value + live ;
     }
 
     getStatus(){
@@ -38,39 +38,43 @@ class Camera {
         this.status = value == 'on';
     }
 
-    enableCameraDetectionFeature(){
-        var self = this;
+    enableCameraDetectionFeature( ){
+        let self = this;
         return {
             getter: () => {
                 return self.status;
             },
             setter: ( v ) => {
                 self.status = v;
-                this.onPropertyChanged( 'status' );
             }
         }
     }
 
     onPropertyChanged( propertyName ) {
         // TODO: POST Netatmo API to change camera status
+        //console.log(propertyName +" firing "  + this.callbacks.length)
+        //this.callbacks.forEach( c => c(propertyName));
+    }
+
+    notifyPropertyChanged( callback ){
+        console.log('Callback registered')
+        //this.callbacks.push(callback);
     }
 }
 
 module.exports.discoverCameras = () => {
+    console.log('Discovering cameras')
     return new Promise( (resolve, reject) => {
         api.getHomeData( (err,homeData) => {
             let homeCameras =  homeData.homes[0].cameras;
-            const discoveredCameras = settings.cameras
-                .map( cameraSetting => new Camera( cameraSetting ) )
-                .reduce( ( prev, cam ) => {
-                    let homeCamera = homeCameras.find( homeCamera => cam.name == homeCamera.name );
-                    if( homeCamera ){
-                        cam.setStatus( homeCamera.status );
-                        cam.setLiveSnapshotUri( homeCamera.vpn_url, homeCamera.is_local );
-                        prev.push( cam );
-                    }
-                    return prev;
-                }, []);
+            let discoveredCameras = [];
+            console.log(homeCameras);
+            for( let homeCamera of homeCameras) {
+                const cam = new Camera( homeCamera );
+                cam.setStatus( homeCamera.status );
+                cam.setLiveSnapshotUri( homeCamera.vpn_url, homeCamera.is_local );
+                discoveredCameras.push(cam);
+            }
             resolve( discoveredCameras );
         });
     });
